@@ -18,6 +18,7 @@ let schema = buildSchema(`
 
   type Query {
     getMessage(id: ID!): Message
+    getAllMessages: [Message]
   }
 
   type Mutation {
@@ -29,11 +30,11 @@ let schema = buildSchema(`
 // If Message had any complex fields, we'd put them on this object.
 class Message {
 
-  private id : string
-  private content : string
-  private author : string
+  private id: string
+  private content: string
+  private author: string
 
-  constructor(id : any , { content, author } : any) {
+  constructor(id: any, { content, author }: any) {
     this.id = id;
     this.content = content;
     this.author = author;
@@ -41,23 +42,28 @@ class Message {
 }
 
 // Database
-let fakeDatabase : any = {};
+let fakeDatabase: any = {};
 
 // The root provides a resolver function for each API endpoint
 let root = {
-  getMessage: ({ id } : any) => {
+  getMessage: ({ id }: any) => {
     if (!fakeDatabase[id]) {
       throw new Error('no message exists with id ' + id);
     }
     return new Message(id, fakeDatabase[id]);
   },
-  createMessage: ({ input } : any) => {
+  getAllMessages: ({ id }: any) => {
+    return Object.keys(fakeDatabase).map((key: any) => {
+      return new Message(key, fakeDatabase[key])
+    })
+  },
+  createMessage: ({ input }: any) => {
     // Create a random id for our "database".
     let id = require('crypto').randomBytes(10).toString('hex');
     fakeDatabase[id] = input;
     return new Message(id, input);
   },
-  updateMessage: ({ id, input } : any) => {
+  updateMessage: ({ id, input }: any) => {
     if (!fakeDatabase[id]) {
       throw new Error('no message exists with id ' + id);
     }
@@ -72,5 +78,6 @@ app.use('/graphql', graphqlHTTP({
   rootValue: root,
   graphiql: true,
 }));
+
 app.listen(3000);
 console.log('Running a GraphQL API server at http://localhost:3000/graphql');
