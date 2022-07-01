@@ -1,6 +1,7 @@
 import express from 'express';
 const { graphqlHTTP } = require('express-graphql');
 const { buildSchema } = require('graphql');
+const app = express();
 
 // Construct a schema, using GraphQL schema language
 let schema = buildSchema(`
@@ -39,9 +40,10 @@ class Message {
   }
 }
 
-// Base de datos
+// Database
 let fakeDatabase : any = {};
 
+// The root provides a resolver function for each API endpoint
 let root = {
   getMessage: ({ id } : any) => {
     if (!fakeDatabase[id]) {
@@ -64,7 +66,7 @@ let root = {
     return new Message(id, input);
   },
 };
-const app = express();
+
 app.use('/graphql', graphqlHTTP({
   schema: schema,
   rootValue: root,
